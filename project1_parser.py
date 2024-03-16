@@ -40,23 +40,24 @@ class Lexer:
 
     # move the lexer position and identify next possible tokens.
     def get_token(self):
-        # Skip any whitespace
-        self.skip_whitespace()
+        self.skip_whitespace() #Skip any whitespace
 
-        # End of input
-        if self.current_char is None:
+        if self.current_char is None: #EOF refers to End of Input
             return Token('EOF', None)
 
-        # Number token
         if self.current_char.isdigit():
-            return Token('NUMBER', self.number())
+            return Token('NUMBER', self.number()) #Number
 
-        # Identifier or keyword
         if self.current_char.isalpha():
             ident = self.identifier()
-            # Check if the identifier matches any keyword
-            if ident in ('if', 'then', 'else', 'while', 'do'):
-                return Token('KEYWORD', ident)
+
+            # Check if the identifier is a specific keyword
+            if ident == 'if':
+                return Token('IF', 'if')
+            elif ident == 'else':
+                return Token('ELSE', 'else')
+            elif ident == 'while':
+                return Token('WHILE', 'while')
             else:
                 return Token('VARIABLE', ident)
 
@@ -133,9 +134,13 @@ class Parser:
         return statements
 
     def statement(self):
-        if self.current_token.type == 'VARIABLE':
+        if self.current_token.type == 'IF':
+            return self.if_statement()
+        elif self.current_token.type == 'WHILE':
+            return self.while_loop()
+        elif self.current_token.type == 'VARIABLE':
             return self.assignment()
-        # Add handling for other types of statements here
+    # Add handling for 'ELSE' where appropriate, typically within 'if_statement'
 
     def assignment(self):
         var_token = self.current_token
@@ -182,38 +187,36 @@ class Parser:
             raise Exception(f"Unexpected token: {token}")
 
     def if_statement(self):
-        # Assuming 'if' token already matched, advance past 'if'
-        self.advance()
+    # Method is called based on token type
+        self.advance()  # Move past 'if'
         condition_node = self.condition()
 
-        self.expect('KEYWORD', 'then')  # Utility method to assert and consume specific tokens
-        then_branch = []
-        while not self.current_token.matches('KEYWORD', 'else') and not self.current_token.matches('EOF'):
-            then_branch.append(self.statement())
+        self.expect('THEN', 'then')  
+        then_branch = self.statement()
 
-        else_branch = []
-        if self.current_token.type == 'KEYWORD' and self.current_token.value == 'else':
-            self.advance()  # Advance past 'else'
-            while not self.current_token.matches('EOF'):
-                else_branch.append(self.statement())
+        else_branch = None
+        if self.current_token.type == 'ELSE':
+            self.advance()  # Move past 'else'
+            else_branch = self.statement()
 
         return ('if', condition_node, then_branch, else_branch)
- 
+
+    
     def while_loop(self):
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
         condition_node = self.condition()
-
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'do':
+        
+        if self.current_token.value != 'do':
             raise Exception("Expected 'do'")
         self.advance()  # Advance past 'do'
-
+        
         body = self.statement()
-
+        
         return ('while', condition_node, body)
-
+    
     def condition(self):
         left = self.arithmetic_expression()
-
+        
         if self.current_token.type == 'OPERATOR' and self.current_token.value in ('==', '!=', '<', '>', '<=', '>='):
             operator = self.current_token.value
             self.advance()
@@ -221,4 +224,5 @@ class Parser:
             return (operator, left, right)
         else:
             raise Exception("Invalid condition")
+
 
