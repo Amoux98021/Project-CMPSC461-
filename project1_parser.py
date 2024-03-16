@@ -40,13 +40,13 @@ class Lexer:
 
     # move the lexer position and identify next possible tokens.
     def get_token(self):
-        self.skip_whitespace() #Skip any whitespace
+        self.skip_whitespace()  # Skip any whitespace
 
-        if self.current_char is None: #EOF refers to End of Input
+        if self.current_char is None:  # EOF refers to End of Input
             return Token('EOF', None)
 
         if self.current_char.isdigit():
-            return Token('NUMBER', self.number()) #Number
+            return Token('NUMBER', self.number())  # Number
 
         if self.current_char.isalpha():
             ident = self.identifier()
@@ -58,6 +58,8 @@ class Lexer:
                 return Token('ELSE', 'else')
             elif ident == 'while':
                 return Token('WHILE', 'while')
+            elif ident == 'do':  # Handle 'do' keyword
+                return Token('DO', 'do')
             else:
                 return Token('VARIABLE', ident)
 
@@ -100,7 +102,6 @@ class Lexer:
 # Parser
 # Input : lexer object
 # Output: AST program representation.
-
 
 # First and foremost, to successfully complete this project you have to understand
 # the grammar of the language correctly.
@@ -201,6 +202,10 @@ class Parser:
 
         return ('if', condition_node, then_branch, else_branch)
 
+    def expect(self, expected_type, expected_value=None):
+        if self.current_token.type != expected_type or (expected_value is not None and self.current_token.value != expected_value):
+            raise Exception(f"Expected {expected_type} but got {self.current_token.type}")
+        self.advance()
     
     def while_loop(self):
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
@@ -224,5 +229,3 @@ class Parser:
             return (operator, left, right)
         else:
             raise Exception("Invalid condition")
-
-
