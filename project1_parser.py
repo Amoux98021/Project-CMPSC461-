@@ -182,21 +182,23 @@ class Parser:
             raise Exception(f"Unexpected token: {token}")
 
     def if_statement(self):
-        self.advance()  # Assuming 'if' token already matched, advance past 'if'
+        # Assuming 'if' token already matched, advance past 'if'
+        self.advance()
         condition_node = self.condition()
 
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'then':
-            raise Exception("Expected 'then'")
-        self.advance()  # Advance past 'then'
+        self.expect('KEYWORD', 'then')  # Utility method to assert and consume specific tokens
+        then_branch = []
+        while not self.current_token.matches('KEYWORD', 'else') and not self.current_token.matches('EOF'):
+            then_branch.append(self.statement())
 
-        then_branch = self.statement()
-
-        else_branch = None
+        else_branch = []
         if self.current_token.type == 'KEYWORD' and self.current_token.value == 'else':
             self.advance()  # Advance past 'else'
-            else_branch = self.statement()
-        return ('if', condition_node, then_branch, else_branch)
+            while not self.current_token.matches('EOF'):
+                else_branch.append(self.statement())
 
+        return ('if', condition_node, then_branch, else_branch)
+ 
     def while_loop(self):
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
         condition_node = self.condition()
