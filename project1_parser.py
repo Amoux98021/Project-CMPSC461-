@@ -114,47 +114,108 @@ class Lexer:
 # A minimal(basic) working parser must have working implementation for all functions except:
 # if_statment, while_loop, condition.
 
+
 class Parser:
     def __init__(self, lexer):
         self.lexer = lexer
-        self.current_token = None
-
-    # function to parse the entire program
-    def parse(self):
-        
+        self.current_token = self.lexer.get_token()
     # move to the next token.
     def advance(self):
-
+        self.current_token = self.lexer.get_token()
+    # function to parse the entire program
+    def parse(self):
+        return self.program()
     # parse the one or multiple statements
     def program(self):
-        
-    
-    # parse if, while, assignment statement.
+        statements = []
+        while self.current_token.type != 'EOF':
+            statements.append(self.statement())
+        return statements
+
     def statement(self):
+        if self.current_token.type == 'VARIABLE':
+            return self.assignment()
+        # Add handling for other types of statements here
 
-
-    # parse assignment statements
     def assignment(self):
-     
-
+        var_token = self.current_token
+        self.advance()
+        if self.current_token.type != 'OPERATOR' or self.current_token.value != '=':
+            raise Exception("Invalid assignment syntax")
+        self.advance()
+        expr = self.arithmetic_expression()
+        return ('=', var_token.value, expr)
     # parse arithmetic experssions
     def arithmetic_expression(self):
-        
-   
+        node = self.term()
+        while self.current_token.type == 'OPERATOR' and self.current_token.value in ('+', '-'):
+            token = self.current_token
+            self.advance()
+            node = (token.value, node, self.term())
+        return node
+
     def term(self):
-    
+        node = self.factor()
+        while self.current_token.type == 'OPERATOR' and self.current_token.value in ('*', '/'):
+            token = self.current_token
+            self.advance()
+            node = (token.value, node, self.factor())
+        return node
 
     def factor(self):
+        token = self.current_token
+        if token.type == 'NUMBER':
+            self.advance()
+            return token.value
+        elif token.type == 'VARIABLE':
+            self.advance()
+            return token.value
+        elif token.type == 'PAREN' and token.value == '(':
+            self.advance()
+            node = self.arithmetic_expression()
+            if self.current_token.type == 'PAREN' and self.current_token.value == ')':
+                self.advance()
+                return node
+            else:
+                raise Exception("Missing closing parenthesis")
+        else:
+            raise Exception(f"Unexpected token: {token}")
 
-
-    # parse if statement, you can handle then and else part here.
-    # you also have to check for condition.
     def if_statement(self):
-
+        self.advance()  # Assuming 'if' token already matched, advance past 'if'
+        condition_node = self.condition()
+        
+        if self.current_token.value != 'then':
+            raise Exception("Expected 'then'")
+        self.advance()  # Advance past 'then'
+        
+        then_branch = self.statement()
+        
+        else_branch = None
+        if self.current_token.value == 'else':
+            self.advance()  # Advance past 'else'
+            else_branch = self.statement()
+        return ('if', condition_node, then_branch, else_branch)
     
-    # implement while statment, check for condition
-    # possibly make a call to statement?
     def while_loop(self):
+        self.advance()  # Assuming 'while' token already matched, advance past 'while'
+        condition_node = self.condition()
+        
+        if self.current_token.value != 'do':
+            raise Exception("Expected 'do'")
+        self.advance()  # Advance past 'do'
+        
+        body = self.statement()
+        
+        return ('while', condition_node, body)
     
-
     def condition(self):
+        left = self.arithmetic_expression()
+        
+        if self.current_token.type == 'OPERATOR' and self.current_token.value in ('==', '!=', '<', '>', '<=', '>='):
+            operator = self.current_token.value
+            self.advance()
+            right = self.arithmetic_expression()
+            return (operator, left, right)
+        else:
+            raise Exception("Invalid condition")
