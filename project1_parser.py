@@ -184,34 +184,34 @@ class Parser:
     def if_statement(self):
         self.advance()  # Assuming 'if' token already matched, advance past 'if'
         condition_node = self.condition()
-        
-        if self.current_token.value != 'then':
+
+        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'then':
             raise Exception("Expected 'then'")
         self.advance()  # Advance past 'then'
-        
+
         then_branch = self.statement()
-        
+
         else_branch = None
-        if self.current_token.value == 'else':
+        if self.current_token.type == 'KEYWORD' and self.current_token.value == 'else':
             self.advance()  # Advance past 'else'
             else_branch = self.statement()
         return ('if', condition_node, then_branch, else_branch)
-    
+
     def while_loop(self):
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
         condition_node = self.condition()
-        
-        if self.current_token.value != 'do':
+
+        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'do':
             raise Exception("Expected 'do'")
         self.advance()  # Advance past 'do'
-        
+
         body = self.statement()
-        
+
         return ('while', condition_node, body)
-    
+
     def condition(self):
         left = self.arithmetic_expression()
-        
+
         if self.current_token.type == 'OPERATOR' and self.current_token.value in ('==', '!=', '<', '>', '<=', '>='):
             operator = self.current_token.value
             self.advance()
@@ -219,3 +219,4 @@ class Parser:
             return (operator, left, right)
         else:
             raise Exception("Invalid condition")
+
