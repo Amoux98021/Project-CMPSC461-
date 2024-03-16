@@ -54,6 +54,8 @@ class Lexer:
             # Check if the identifier is a specific keyword
             if ident == 'if':
                 return Token('IF', 'if')
+            elif ident == 'then':
+                return Token('THEN', 'then')
             elif ident == 'else':
                 return Token('ELSE', 'else')
             elif ident == 'while':
@@ -87,6 +89,10 @@ class Lexer:
                 char = self.current_char
                 self.advance()
                 return Token('OPERATOR' if char in ('+', '-', '*', '/', '=', '>', '<') else 'PAREN', char)
+
+        token = Token('THEN', 'then') # Example for fixing the issue
+        print(f"Generated Token: {token}") # print
+        return token
 
         # If we reach here, it means we encountered an unknown character
         raise Exception(f"Unknown character: {self.current_char}")
@@ -141,7 +147,6 @@ class Parser:
             return self.while_loop()
         elif self.current_token.type == 'VARIABLE':
             return self.assignment()
-    # Add handling for 'ELSE' where appropriate, typically within 'if_statement'
 
     def assignment(self):
         var_token = self.current_token
@@ -188,19 +193,24 @@ class Parser:
             raise Exception(f"Unexpected token: {token}")
 
     def if_statement(self):
-    # Method is called based on token type
-        self.advance()  # Move past 'if'
+        self.advance()  # Move past 'IF'
         condition_node = self.condition()
 
-        self.expect('THEN', 'then')  
+        if self.current_token.type != 'THEN':
+            raise Exception("Expected 'then' after 'if' condition")
+        self.advance()  # Move past 'THEN'
+
         then_branch = self.statement()
 
         else_branch = None
         if self.current_token.type == 'ELSE':
-            self.advance()  # Move past 'else'
+            self.advance()  # Move past 'ELSE'
             else_branch = self.statement()
 
-        return ('if', condition_node, then_branch, else_branch)
+        if else_branch is None:
+            return ('if', condition_node, then_branch)
+        else:
+            return ('if', condition_node, then_branch, else_branch)
 
     def expect(self, expected_type, expected_value=None):
         if self.current_token.type != expected_type or (expected_value is not None and self.current_token.value != expected_value):
@@ -211,11 +221,11 @@ class Parser:
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
         condition_node = self.condition()
         
-        if self.current_token.value != 'do':
+        if self.current_token.value != 'DO':
             raise Exception("Expected 'do'")
         self.advance()  # Advance past 'do'
         
-        body = self.statement()
+        body = [self.statement()]
         
         return ('while', condition_node, body)
     
