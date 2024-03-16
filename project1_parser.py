@@ -224,13 +224,13 @@ class Parser:
 
         #print(f"Current Token before expecting 'DO': {self.current_token}")  # Debugging sucks but we gotta do it
         
-        if self.current_token.value == 'DO':
-            #raise Exception("Expected 'do'")
-            self.advance()  # Advance past 'do'
+        if self.current_token.value != 'DO':
+            raise Exception("Expected 'do'")
+        self.advance()  # Advance past 'do'
         
-        body = [self.statement()] # [] added to fix error
+        body = self.statement() # [] added to fix error
         
-        return ('while', condition, body)
+        return ('while', condition, [body])
     
     def condition(self):
         left = self.arithmetic_expression()
