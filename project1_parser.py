@@ -16,7 +16,7 @@ class Lexer:
     def advance(self):
         self.position += 1
         if self.position >= len(self.code):
-            self.current_char = None  # Indicates end of input
+            self.current_char = None  # Indicates the end of our input
         else:
             self.current_char = self.code[self.position]
 
@@ -38,20 +38,20 @@ class Lexer:
             self.advance()
         return result
 
-    # move the lexer position and identify next possible tokens.
+    # We move the lexer position and identify all next possible tokens
     def get_token(self):
-        self.skip_whitespace()  # Skip any whitespace
+        self.skip_whitespace()  # Skip whitespace
 
-        if self.current_char is None:  # EOF refers to End of Input
-            return Token('EOF', None)
+        if self.current_char is None:  # EOI = End of Input
+            return Token('EOI', None)
 
         if self.current_char.isdigit():
-            return Token('NUMBER', self.number())  # Number
+            return Token('NUMBER', self.number())  # For all Numbers
 
         if self.current_char.isalpha():
-            ident = self.identifier()
+            ident = self.identifier() # Identifier
 
-            # Check if the identifier is a specific keyword
+            # We check if the identifier has a specific keyword
             if ident == 'if':
                 return Token('IF', 'if')
             elif ident == 'then':
@@ -60,14 +60,14 @@ class Lexer:
                 return Token('ELSE', 'else')
             elif ident == 'while':
                 return Token('WHILE', 'while')
-            elif ident == 'do':  # Handle 'do' keyword
+            elif ident == 'do':  # Handle 'do' keyword (Added the fix while_loop error)
                 return Token('DO', 'do')
             else:
                 return Token('VARIABLE', ident)
 
         # Operators
         if self.current_char in ('+', '-', '*', '/', '(', ')', '=', '>', '<', '!', ';'):
-            # Handle multi-character operators
+            # Cases to handle multi-character operators
             if self.current_char == '=' and self.peek() == '=':
                 self.advance()
                 self.advance()
@@ -136,7 +136,7 @@ class Parser:
     # parse the one or multiple statements
     def program(self):
         statements = []
-        while self.current_token.type != 'EOF':
+        while self.current_token.type != 'EOI':
             statements.append(self.statement())
         return statements
 
@@ -234,10 +234,10 @@ class Parser:
         
         #print(f"Current Token after 'do': {self.current_token}")
         
-        do_branch = [ ] # [] added to fix error
+        do_branch = self.statement() # [] added to fix error
+        body = [do_branch]
         #print(f"Body parsed: {do_branch}")
-
-        return ('while', condition_node, do_branch)
+        return ('while', condition_node, body)
     
     def condition(self):
         left = self.arithmetic_expression()
