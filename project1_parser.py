@@ -220,17 +220,24 @@ class Parser:
     def while_loop(self):
         self.advance()  # Assuming 'while' token already matched, advance past 'while'
         
-        condition = self.condition()
+        condition_node = self.condition()
+
+        #print(f"Condition parsed: {condition_node}")
 
         #print(f"Current Token before expecting 'DO': {self.current_token}")  # Debugging sucks but we gotta do it
         
-        if self.current_token.value != 'DO':
+        #print(f"Current Token Type: {self.current_token.type}, Value: '{self.current_token.value}'")
+        if self.current_token.type != 'DO':
+            #print("Raising exception due to not 'DO'") #debug
             raise Exception("Expected 'do'")
         self.advance()  # Advance past 'do'
         
-        body = self.statement() # [] added to fix error
+        #print(f"Current Token after 'do': {self.current_token}")
         
-        return ('while', condition, [body])
+        do_branch = [ ] # [] added to fix error
+        #print(f"Body parsed: {do_branch}")
+
+        return ('while', condition_node, do_branch)
     
     def condition(self):
         left = self.arithmetic_expression()
